@@ -22,6 +22,9 @@ from rest_framework.validators import UniqueValidator
 # models
 from cride.users.models import User, Profile
 
+# serializers
+from cride.users.serializers.profiles import ProfileModelSerializer
+
 class AccountVerificationSerializer(serializers.Serializer):
     """Account verification serializer."""
 
@@ -52,6 +55,8 @@ class AccountVerificationSerializer(serializers.Serializer):
 
 class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
+
+    profile = ProfileModelSerializer(read_only=True)
     
     class Meta:
         """Meta class."""
@@ -61,7 +66,8 @@ class UserModelSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'email',
-            'phone_number'
+            'phone_number',
+            'profile',
         )
 
 class UserLoginSerializer(serializers.Serializer):
@@ -143,7 +149,7 @@ class UserSignUpSerializer(serializers.Serializer):
         data.pop('password_confirmation')
 
         try:
-            user = User.objects.create_user(**data, is_verified=False)
+            user = User.objects.create_user(**data, is_verified=False, is_client=True)
         except IntegrityError as e:
             raise serializers.ValidationError('Username or Email already exists.')
 

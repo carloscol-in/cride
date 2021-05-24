@@ -53,7 +53,7 @@ class Membership(CRideModel):
         default=0,
     )
 
-    # status
+    # active status on the circle
     is_active = models.BooleanField(
         'active status',
         default=True,
