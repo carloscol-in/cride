@@ -7,6 +7,10 @@ from rest_framework import viewsets, mixins
 from cride.circles.permissions.circles import IsCircleAdmin
 from rest_framework.permissions import IsAuthenticated
 
+# Filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+
 # cride serializers
 from cride.circles.serializers import CircleModelSerializer
 
@@ -24,6 +28,13 @@ class CircleViewSet(
 
     serializer_class = CircleModelSerializer
     lookup_field = 'slug_name'
+
+    # filters
+    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    search_fields = ('slug_name', 'name')
+    ordering_fields = ('rides_offered', 'rides_taken', 'name', 'created', 'members_limit')
+    ordering = ('-members__count', '-rides_offered', '-rides_taken')
+    filter_fields = ('verified', 'is_limited')
 
     def get_queryset(self):
         """Override the queryset to filter only the public circles."""
