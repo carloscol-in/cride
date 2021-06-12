@@ -1,1 +1,1 @@
-from .rides import CreateRideSerializer
+from .rides import *
