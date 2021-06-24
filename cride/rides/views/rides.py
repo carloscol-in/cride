@@ -62,6 +62,8 @@ class RideViewSet(
 
         if self.action in ['partial_update', 'update']:
             permissions.append(IsRideOwner)
+        elif self.action == 'join':
+            permissions.append(IsNotRideOwner)
 
         return [p() for p in permissions]
 
