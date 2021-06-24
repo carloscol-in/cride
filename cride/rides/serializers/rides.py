@@ -150,7 +150,7 @@ class JoinRideSerializer(serializers.ModelSerializer):
 
         try:
             membership = Membership.objects.get(
-                user=user, 
+                user=user,
                 circle=circle,
                 is_active=True
             )
@@ -168,6 +168,9 @@ class JoinRideSerializer(serializers.ModelSerializer):
 
         if ride.departure_date <= timezone.now():
             raise serializers.ValidationError("You can't join this ride now.")
+
+        if ride.offered_by == self.context['user']:
+            raise serializers.ValidationError("The ride's creator cannot join as a passenger.")
 
         if ride.available_seats < 1:
             raise serializers.ValidationError("There's not enough room for another passenger in this ride.")
