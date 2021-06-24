@@ -1,13 +1,13 @@
 """Rides mixins."""
 
 # DRF
-from rest_framework import mixins
+from rest_framework import viewsets
 from rest_framework.generics import get_object_or_404
 
 # Models
 from cride.circles.models import Circle
 
-class RelatedToCircle(mixins.GenericViewSet):
+class RelatedToCircle(viewsets.GenericViewSet):
     """This class has to be inherited by all classes that need to
     dispatch circle objects related to their class."""
 
