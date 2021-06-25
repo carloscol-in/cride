@@ -11,3 +11,12 @@ class IsRideOwner(BasePermission):
         """Verify request user is the ride creator."""
 
         return request.user == obj.offered_by
+
+
+class IsNotRideOwner(BasePermission):
+    """Verify the user is not the ride publisher"""
+
+    def has_object_permission(self, request, view, obj):
+        """Verify the user is not the ride publisher."""
+
+        return not request.user == obj.offered_by
