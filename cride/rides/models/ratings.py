@@ -20,7 +20,7 @@ class Rating(CRideModel):
         on_delete=models.CASCADE
     )
 
-    rating_user = models.ForeginKey(
+    rating_user = models.ForeignKey(
         'users.User',
         on_delete=models.SET_NULL,
         null=True,
