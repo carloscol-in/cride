@@ -8,12 +8,15 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
 # Celery
-from celery.decorators import task
+from celery.decorators import task, periodic_task
 
 # Utilities
 import time
 import jwt
 from datetime import timedelta
+
+# Models
+from cride.rides.models import Ride
 
 User = get_user_model()
 
@@ -60,3 +63,13 @@ def send_confirmation_email(user_pk):
         'text/html'
     )
     msg.send()
+
+@periodic_task(name='disable_finished_rides', run_every=timedelta(seconds=30))
+def disable_finished_rides():
+    """Disable all finished rides."""
+    now = timezone.now()
+    offset = now - timedelta(seconds=60)
+
+    # update rides that have already finished
+    rides = Ride.objects.filter(arrival_date__lte=offset, is_active=True)
+    rides.update(is_active=False)
