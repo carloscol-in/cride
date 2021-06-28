@@ -8,16 +8,17 @@ import jwt
 
 # Django
 from django.conf import settings
-from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
 from django.contrib.auth import authenticate, password_validation
 
 # Django REST Framework
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
+
+# Tasks
+from cride.taskapp.tasks import send_confirmation_email
 
 # models
 from cride.users.models import User, Profile
@@ -156,44 +157,6 @@ class UserSignUpSerializer(serializers.Serializer):
         Profile.objects.create(user=user)
 
         # send email
-        self.send_confirmation_email(user)
+        send_confirmation_email.delay(user_pk=user.pk)
 
         return user
-
-    def send_confirmation_email(self, user):
-        """Send account verification link to user's email."""
-        verification_token = self.gen_verification_token(user)
-        subject = f'Welcome @{user.username}! - Account Verification Code'
-        from_email = 'Comparte Ride <noreply@comparteride.com>'
-        content = render_to_string(
-            'emails/users/account_verification.html',
-            {
-                'token': verification_token,
-                'user': user,
-            }
-        )
-        msg = EmailMultiAlternatives(
-            subject,
-            content,
-            from_email,
-            [user.email]
-        )
-        msg.attach_alternative(
-            content,
-            'text/html'
-        )
-        msg.send()
-
-    def gen_verification_token(self, user):
-        """Generate JWT to verify user's account."""
-        exp_date = timezone.now() + timedelta(days=3)
-        payload = {
-            'user': user.username,
-            'exp': int(exp_date.timestamp()),
-            'type': 'email_confirmation'
-        }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-
-        # `.decode()` is neccessary for PyJWT version < 2.0.0
-        # for versions >=2.0.0 the token won't be represented as bytes
-        return token.decode()
