@@ -15,7 +15,7 @@ from cride.circles.permissions.memberships import (
 )
 
 # serializers
-from cride.circles.serializers import MembershipModelSerializer, AddMemberSerializer
+from cride.circles.serializers import MembershipModelSerializer, AddMemberSerializer, CircleModelSerializer
 
 # models
 from cride.circles.models import (
@@ -90,7 +90,9 @@ class MembershipViewSet(
         member = self.get_object()
 
         invited_members = Membership.objects.filter(
-            circle=self.circleUserModelSerializer()
+            circle=self.circle,
+            invited_by=request.user,
+            is_active=True,
         )
 
         unused_invitations = Invitation.objects.filter(
