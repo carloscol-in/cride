@@ -3,9 +3,15 @@
 # Django
 from django.test import TestCase
 
+# DRF
+from rest_framework import status
+from rest_framework.test import APITestCase
+
 # Models
+from cride.users.models import Profile
 from django.contrib.auth import get_user_model
-from cride.circles.models import Invitation, Circle
+from rest_framework.authtoken.models import Token
+from cride.circles.models import Invitation, Circle, Membership
 
 User = get_user_model()
 
@@ -15,17 +21,17 @@ class InvitationManagerTestCase(TestCase):
     def setUp(self):
         """Test initialization"""
         self.user = User.objects.create(
-            first_name='Carlos',
-            last_name='Colin',
-            email='carlos@test-mail.com',
-            username='carloscolin',
-            password='admin123'
+            first_name='Joe',
+            last_name='Doe',
+            email='joe@test-mail.com',
+            username='joedoe',
+            password='admin123',
         )
         self.circle = Circle.objects.create(
-            name='Golf Interlomas',
-            slug_name='golf-interlomas',
-            about='Circulo para ir a "rides" que vayan la practica de golf a lo largo de la semana',
-            verified=True
+            name='Hiking Vancouver',
+            slug_name='hiking-vancouver',
+            about='Circle where rides to go hiking get shared',
+            verified=True,
         )
 
     def test_code_generation(self):
@@ -61,3 +67,45 @@ class InvitationManagerTestCase(TestCase):
         )
 
         self.assertNotEqual(code, invitation.code)
+
+class MembersInvitationsAPITestCase(APITestCase):
+    """Test API endpoint"""
+
+    def setUp(self):
+        """Set up needed properties."""
+        self.user = User.objects.create(
+            first_name='Joe',
+            last_name='Doe',
+            email='joe@test-mail.com',
+            username='joedoe',
+            password='admin123',
+        )
+        self.profile = Profile.objects.create(
+            user=self.user,
+        )
+        self.circle = Circle.objects.create(
+            name='Hiking Vancouver',
+            slug_name='hiking-vancouver',
+            about='Circle where rides to go hiking get shared',
+            verified=True,
+        )
+        self.membership = Membership.objects.create(
+            user=self.user,
+            profile=self.profile,
+            circle=self.circle,
+            remaining_invitations=10,
+        )
+        self.token = Token.objects.create(
+            user=self.user,
+        ).key
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token}')
+
+    def test_success(self):
+        """Verify request succeeds."""
+        url = f'/circles/{self.circle.slug_name}/members/{self.user.username}/invitations/'
+        request = self.client.get(url)
+        # import pdb; pdb.set_trace()
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    
