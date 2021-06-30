@@ -95,17 +95,34 @@ class MembersInvitationsAPITestCase(APITestCase):
             circle=self.circle,
             remaining_invitations=10,
         )
+
+        # Auth
         self.token = Token.objects.create(
             user=self.user,
         ).key
-
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token}')
+
+        # Url
+        self.url = f'/circles/{self.circle.slug_name}/members/{self.user.username}/invitations/'
 
     def test_success(self):
         """Verify request succeeds."""
-        url = f'/circles/{self.circle.slug_name}/members/{self.user.username}/invitations/'
-        request = self.client.get(url)
+        request = self.client.get(self.url)
         # import pdb; pdb.set_trace()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
 
-    
+    def test_invitation_creation(self):
+        """Verify invitations are generated if none exist previously."""
+        # Invitations in DB must be 0
+        self.assertEqual(Invitation.objects.count(), 0)
+
+        # create invitations
+        request = self.client.get(self.url)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+        # verify new invitations were created
+        invitations = Invitation.objects.filter(issued_by=self.user)
+        self.assertEqual(invitations.count(), self.membership.remaining_invitations)
+
+        for invitation in invitations:
+            self.assertIn(invitation.code, request.data['invitations'])
